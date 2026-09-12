@@ -3,7 +3,6 @@ services:
     build:
       context: .
       dockerfile: api.Dockerfile
-    container_name: roomies-api
     environment:
       NODE_ENV: production
       PORT: "3000"
@@ -14,7 +13,6 @@ services:
     build:
       context: .
       dockerfile: frontend.Dockerfile
-    container_name: roomies-frontend
     depends_on:
       - api
     ports:
