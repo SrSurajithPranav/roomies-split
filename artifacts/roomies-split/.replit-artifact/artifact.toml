@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Roomies Split"
+description = "A mobile-first bill splitting app for Indian households and friends. Create a bill manually or review receipt items, assign them to people, reconcile taxes and discounts, and share exact amounts without requiring an account."
+version = "1.0.0"
+id = "artifacts/roomies-split"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24675
+
+[services.development]
+run = "pnpm --filter @workspace/roomies-split run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/roomies-split", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/roomies-split/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24675"
+BASE_PATH = "/"
