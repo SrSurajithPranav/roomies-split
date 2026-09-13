@@ -1,0 +1,12 @@
+{
+  "framework": "vite",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "PORT=4173 BASE_PATH=/ pnpm --filter @workspace/roomies-split run build",
+  "outputDirectory": "artifacts/roomies-split/dist/public",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
