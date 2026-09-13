@@ -49,7 +49,8 @@ No additional preferences recorded.
 ## Gotchas
 
 - Frontend artifact workflows provide `PORT` and `BASE_PATH`; direct Vite builds need both values explicitly.
-- Receipt parsing requires `OPENAI_API_KEY` in Replit Secrets when the managed AI integration is unavailable — if it's missing, `/api/receipt/parse` returns a 502 with a clear message, which the frontend now displays as-is instead of a generic string.
+- Receipt parsing uses `GEMINI_API_KEY` with Gemini 3.6 Flash. The deployment must have that secret in its production secret store; if it is missing, `/api/receipt/parse` returns a clear JSON 502 that the frontend displays as-is instead of a generic string.
+- Receipt calls have a 30-second timeout and log the provider status/body plus image count and payload size without logging the image data itself.
 - GST on Indian receipts is printed two ways: additive (subtotal + CGST/SGST on top, typical for restaurants) or already inclusive (item prices include GST; any "GST breakup" table is informational, typical for grocery/retail). The extraction prompt normalizes to additive and zeroes cgst/sgst/igst (with a warning) when a receipt's tax is already baked into the total, so the split engine never double-counts it.
 - Fresh checkouts must delete any committed `*.tsbuildinfo` before `pnpm run typecheck` — stale build info can make `tsc --build` skip rebuilding `lib/*` packages and produce confusing `TS6305`/implicit-any errors that aren't real code issues.
 

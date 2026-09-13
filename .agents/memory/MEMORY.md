@@ -1,0 +1,1 @@
+- [Gemini receipt provider](gemini-receipt-provider.md) — keep the model configurable; provider availability can change by account, so inspect raw failures first.
