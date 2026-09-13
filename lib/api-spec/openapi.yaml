@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: receipts
+    description: Receipt parsing operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /receipt/parse:
+    post:
+      operationId: parseReceipt
+      tags: [receipts]
+      summary: Extract structured data from receipt images
+      description: Parses one or more receipt images into user-reviewable structured bill data.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReceiptParseInput"
+      responses:
+        "200":
+          description: Structured receipt extraction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReceiptExtraction"
+        "400":
+          description: Invalid receipt input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Receipt provider failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +66,115 @@ components:
           type: string
       required:
         - status
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    ReceiptImageInput:
+      type: object
+      properties:
+        dataUrl:
+          type: string
+          minLength: 16
+        filename:
+          type: string
+      required:
+        - dataUrl
+    ReceiptParseInput:
+      type: object
+      properties:
+        images:
+          type: array
+          minItems: 1
+          maxItems: 8
+          items:
+            $ref: "#/components/schemas/ReceiptImageInput"
+      required:
+        - images
+    ReceiptItem:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        quantity:
+          type: number
+        unit:
+          type: string
+        unitPrice:
+          type: number
+        totalPrice:
+          type: number
+        discount:
+          type: number
+        tax:
+          type: number
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+      required:
+        - id
+        - name
+        - quantity
+        - unit
+        - unitPrice
+        - totalPrice
+        - discount
+        - tax
+        - confidence
+    ReceiptExtraction:
+      type: object
+      properties:
+        merchant:
+          type: string
+        address:
+          type: ["string", "null"]
+        date:
+          type: ["string", "null"]
+        currency:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReceiptItem"
+        subtotal:
+          type: ["number", "null"]
+        discount:
+          type: number
+        cgst:
+          type: number
+        sgst:
+          type: number
+        igst:
+          type: number
+        otherCharges:
+          type: number
+        roundOff:
+          type: number
+        grandTotal:
+          type: ["number", "null"]
+        warnings:
+          type: array
+          items:
+            type: string
+      required:
+        - merchant
+        - address
+        - date
+        - currency
+        - items
+        - subtotal
+        - discount
+        - cgst
+        - sgst
+        - igst
+        - otherCharges
+        - roundOff
+        - grandTotal
+        - warnings
 

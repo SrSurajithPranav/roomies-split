@@ -1,0 +1,1310 @@
+Build: Roomies Split
+
+Build a complete, production-quality web application called Roomies Split from scratch.
+
+There is no existing source code to reuse.
+
+The app is a smart receipt-based bill splitting application designed primarily for mobile users.
+
+The core idea:
+
+«Snap a receipt. We read the items. You tell us who had what. We split the bill.»
+
+The application should feel dramatically easier than manually entering every item into a bill-splitting app.
+
+---
+
+1. PRODUCT PRINCIPLES
+
+The application must be:
+
+- Mobile-first
+- Extremely easy to use
+- Fast
+- Clean and modern
+- Responsive
+- Accessible
+- Designed primarily for Indian users
+- Currency default: INR (₹)
+- Suitable for groceries, restaurant bills, household purchases, shopping receipts, etc.
+- No unnecessary account creation for basic usage
+- No complicated onboarding
+
+Do not over-engineer the UI.
+
+The user should be able to go from receipt photo → final split in roughly a minute.
+
+---
+
+2. HOMEPAGE
+
+Create a polished landing/home screen for Roomies Split.
+
+Brand:
+
+ROOMIES SPLIT
+
+Tagline:
+
+Split bills, without the math.
+
+Primary CTA:
+
+📸 Scan Receipt
+
+Secondary CTA:
+
+✍️ Enter Manually
+
+Supporting text:
+
+«Take a photo of your receipt and let Roomies Split do the boring part.»
+
+Show a small visual explanation:
+
+SCAN → ASSIGN → SPLIT
+
+Also provide a clear option to start a manual bill.
+
+---
+
+3. CREATE BILL
+
+When the user taps Scan Receipt, allow:
+
+- Camera capture on mobile
+- Upload from gallery
+- Upload from file
+- Drag-and-drop on desktop
+- Multiple receipt images for one bill
+
+For long receipts, support multiple images.
+
+Allow:
+
+- Retake
+- Remove image
+- Add another image
+- Rotate image if required
+- Crop if useful
+
+Show processing progress.
+
+Example:
+
+«Reading your receipt…»
+
+Then:
+
+«Finding items…»
+
+Then:
+
+«Checking the totals…»
+
+Do not make fake progress that lasts unnecessarily long.
+
+---
+
+4. AI RECEIPT RECOGNITION
+
+Use a suitable vision/OCR model/API.
+
+The AI should extract structured information rather than simply returning OCR text.
+
+Extract:
+
+Merchant
+
+- Store/restaurant name
+- Address if available
+- Date
+- Time
+- Bill/receipt number if available
+
+Items
+
+For every item extract:
+
+- Item name
+- Quantity
+- Unit
+- Unit price
+- Total price
+- Discount
+- Tax if available
+- SKU/product code if available
+- Confidence
+
+Understand common receipt formats such as:
+
+- "2 PCS"
+- "2 NOS"
+- "5 KG"
+- "500 G"
+- "1.25 KG"
+- "2 L"
+- "750 ML"
+- "6 × ₹14"
+- "₹120/KG"
+- "₹80/100G"
+
+Correctly distinguish:
+
+quantity × unit price = item total
+
+from a receipt where the displayed number is already the line total.
+
+Support Indian receipt terminology such as:
+
+- CGST
+- SGST
+- IGST
+- GST
+- CESS
+- Round Off
+- Discount
+- MRP
+- Net Amount
+- Total
+
+---
+
+5. STRUCTURED DATA
+
+Internally represent the receipt using structured data similar to:
+
+{
+  "merchant": "",
+  "date": "",
+  "currency": "INR",
+  "items": [
+    {
+      "name": "",
+      "quantity": 1,
+      "unit": "pcs",
+      "unitPrice": 0,
+      "totalPrice": 0,
+      "discount": 0,
+      "tax": 0,
+      "confidence": 0
+    }
+  ],
+  "subtotal": 0,
+  "discount": 0,
+  "cgst": 0,
+  "sgst": 0,
+  "igst": 0,
+  "otherCharges": 0,
+  "roundOff": 0,
+  "grandTotal": 0
+}
+
+Adapt the schema where necessary.
+
+The AI must NOT be responsible for calculating the final split.
+
+AI extracts information.
+
+The application's deterministic calculation engine performs the actual splitting.
+
+---
+
+6. RECEIPT REVIEW SCREEN
+
+After scanning, show:
+
+"We found these items"
+
+Display a clean editable list.
+
+Example:
+
+Aashirvaad Atta
+5 KG · ₹310
+
+Milk
+4 × 500 ML · ₹240
+
+Maggi
+6 PCS · ₹84
+
+Apple
+1.25 KG · ₹175
+
+Every field must be editable.
+
+Allow users to:
+
+- Edit item name
+- Edit quantity
+- Change unit
+- Edit price
+- Edit discount
+- Delete item
+- Add missing item
+- Add another item
+- Undo changes
+
+If AI confidence is low, visually flag the field:
+
+«⚠ Check this»
+
+Do not force users to redo the entire receipt because one item was misread.
+
+---
+
+7. RECEIPT TOTAL VALIDATION
+
+Compare the extracted data against the receipt's final total.
+
+If everything matches:
+
+✓ Receipt total verified
+
+If there is a mismatch:
+
+⚠ Something doesn't add up
+
+Show the difference.
+
+Example:
+
+«Receipt total: ₹1,307.00
+Items + adjustments: ₹1,287.00
+Difference: ₹20.00»
+
+Let the user investigate/correct it.
+
+Never silently fabricate missing amounts.
+
+Allow miscellaneous adjustments where necessary.
+
+---
+
+8. ADD PEOPLE
+
+Next screen:
+
+Who's splitting this?
+
+Allow users to add people quickly.
+
+Example:
+
++ Add person
+
+Surajith
+Arun
+Rahul
+Priya
+
+Allow:
+
+- Add
+- Rename
+- Remove
+- Select/deselect
+- Reorder
+
+Do not require registration.
+
+Optional local recent-person suggestions can be implemented if privacy-safe.
+
+---
+
+9. ITEM ASSIGNMENT
+
+This is the heart of the application.
+
+For each receipt item, ask:
+
+Who had this?
+
+Every item should support three modes.
+
+Mode 1 — One person
+
+Example:
+
+Aashirvaad Atta — 5 KG — ₹310
+
+→ Surajith
+
+The entire item is assigned to Surajith.
+
+---
+
+Mode 2 — Shared equally
+
+Example:
+
+Milk — 4 × 500 ML — ₹240
+
+→ Surajith
+→ Arun
+→ Rahul
+
+The application splits the item equally.
+
+---
+
+Mode 3 — Custom quantity
+
+Example:
+
+Milk — 4 × 500 ML
+
+Surajith → 2
+Arun → 1
+Rahul → 1
+
+The application calculates:
+
+Surajith = ₹120
+Arun = ₹60
+Rahul = ₹60
+
+For weight-based products:
+
+Apple — 1.25 KG — ₹175
+
+Allow:
+
+Surajith → 0.75 KG
+Arun → 0.50 KG
+
+Calculate proportionally.
+
+---
+
+10. SHARED ITEMS
+
+Add a dedicated Shared option.
+
+Useful for:
+
+- Cooking oil
+- Salt
+- Household supplies
+- Cleaning products
+- Common groceries
+- Restaurant dishes everyone shared
+
+Example:
+
+Dishwash Liquid — ₹189
+
+Shared by:
+
+☑ Surajith
+☑ Arun
+☑ Rahul
+
+Automatically divide it equally.
+
+---
+
+11. QUICK ACTIONS
+
+Make allocation extremely fast.
+
+Provide actions such as:
+
+Everyone
+
+Assign to everyone.
+
+Last person
+
+Assign to the previously selected person.
+
+Equal split
+
+Split this item equally among selected people.
+
+One person
+
+Assign 100% to one person.
+
+Custom
+
+Manually allocate quantity/percentage.
+
+Also allow multi-select and bulk actions.
+
+Example:
+
+Select:
+
+☑ Milk
+☑ Bread
+☑ Eggs
+
+Then:
+
+Assign to → Surajith
+
+This should dramatically reduce repetitive tapping.
+
+---
+
+12. QUANTITY VALIDATION
+
+For quantity-based splitting:
+
+The allocated quantity must equal the purchased quantity.
+
+Example:
+
+Purchased:
+
+5 KG
+
+Allocated:
+
+Surajith → 2 KG
+Arun → 2 KG
+Rahul → 1 KG
+
+✓ Valid
+
+But:
+
+Surajith → 3 KG
+Arun → 1 KG
+
+should show:
+
+«1 KG still unassigned»
+
+Do not allow an accidental incorrect split without warning.
+
+Support decimals:
+
+0.25 KG
+0.5 KG
+1.25 KG
+
+For count-based products, normally use whole numbers.
+
+---
+
+13. PEOPLE CAN SHARE PART OF AN ITEM
+
+Support percentage allocation when quantity allocation isn't practical.
+
+Example:
+
+Pizza — ₹800
+
+Surajith → 50%
+Arun → 25%
+Rahul → 25%
+
+Or:
+
+Surajith → ₹400
+Arun → ₹200
+Rahul → ₹200
+
+The user should not be forced into a single allocation method.
+
+---
+
+14. GST, TAXES AND CHARGES
+
+Handle:
+
+- CGST
+- SGST
+- IGST
+- GST
+- CESS
+- Service charges
+- Delivery charges
+- Other charges
+- Discounts
+- Coupons
+- Round-off
+
+The final amount owed by everyone must reconcile with the actual receipt total.
+
+Example:
+
+Receipt:
+
+Subtotal ₹1,000
+CGST ₹25
+SGST ₹25
+Total ₹1,050
+
+If Surajith's pre-tax allocation is ₹400:
+
+His final share should include the appropriate proportion of tax.
+
+Do not simply ignore GST.
+
+---
+
+15. DISCOUNTS
+
+Handle discounts intelligently.
+
+If the receipt has:
+
+Subtotal ₹1,000
+Discount ₹100
+
+the system should allocate the discount proportionally to the items/persons affected.
+
+If the receipt explicitly identifies a discount for a particular item, apply it to that item.
+
+Show discounts clearly.
+
+---
+
+16. ROUNDING
+
+Money calculations must be deterministic.
+
+Always reconcile the final individual amounts with the receipt total.
+
+Example:
+
+Receipt total:
+
+₹1,000.00
+
+People:
+
+A → ₹333.33
+B → ₹333.33
+C → ₹333.34
+
+Total:
+
+₹1,000.00 ✓
+
+Never leave a ₹0.01/₹0.02 unexplained discrepancy.
+
+Use a predictable rounding strategy and display it transparently if necessary.
+
+---
+
+17. MANUAL MODE
+
+Users must be able to create a bill without scanning.
+
+Manual flow:
+
+Add people → Add items → Assign → Split
+
+Each manual item should support:
+
+- Name
+- Quantity
+- Unit
+- Price
+- Discount
+- Tax
+- Person allocation
+
+This preserves the original usefulness of Roomies Split even when users don't have a receipt.
+
+---
+
+18. BILL SUMMARY
+
+After allocation, show a beautiful summary.
+
+Example:
+
+Bill Split
+
+ABC Supermarket
+
+Total:
+
+₹1,307.24
+
+---
+
+Surajith
+
+₹642.50
+
+Arun
+
+₹384.25
+
+Rahul
+
+₹280.49
+
+---
+
+Also show:
+
+Items: 17
+People: 3
+
+---
+
+19. PERSON BREAKDOWN
+
+Allow users to tap a person's name to see exactly what they owe.
+
+Example:
+
+Surajith — ₹642.50
+
+Aashirvaad Atta
+₹310.00
+
+Milk
+₹120.00
+
+Apples
+₹87.50
+
+GST
+₹XX.XX
+
+Discount
+-₹XX.XX
+
+Total
+₹642.50
+
+This makes the calculation transparent.
+
+---
+
+20. ITEM BREAKDOWN
+
+Users should also be able to inspect an item.
+
+Example:
+
+Milk
+
+4 × 500 ML
+
+₹240
+
+Split:
+
+Surajith — 2 → ₹120
+Arun — 1 → ₹60
+Rahul — 1 → ₹60
+
+---
+
+21. SETTLEMENT VIEW
+
+If one person paid the entire bill, allow the user to specify:
+
+Who paid?
+
+Surajith
+
+Then calculate who needs to pay whom.
+
+Example:
+
+Surajith paid ₹1,307.24
+
+Arun owes Surajith ₹384.25
+Rahul owes Surajith ₹280.49
+
+Show a simple settlement summary.
+
+Avoid unnecessary transaction complexity.
+
+---
+
+22. SHARE RESULTS
+
+Add:
+
+Share Split
+
+Generate a clean shareable summary.
+
+Example:
+
+«🧾 Roomies Split
+ABC Supermarket
+Total: ₹1,307.24
+
+Surajith — ₹642.50
+Arun — ₹384.25
+Rahul — ₹280.49»
+
+Allow:
+
+- Copy to clipboard
+- Native mobile share
+- WhatsApp-friendly text
+- Shareable result page if implemented
+
+Do not require recipients to install the app.
+
+---
+
+23. RECEIPT HISTORY
+
+Optional lightweight local history.
+
+Allow users to see previous bills:
+
+ABC Supermarket
+₹1,307.24 · Today
+
+Restaurant XYZ
+₹2,450 · Yesterday
+
+Allow:
+
+- Open
+- Duplicate
+- Rename
+- Delete
+
+Prefer local storage initially.
+
+Do not require an account merely to maintain local history.
+
+---
+
+24. DUPLICATE BILL
+
+Allow:
+
+Duplicate bill
+
+Useful for recurring household shopping.
+
+The user can reuse:
+
+- People
+- Item allocation patterns
+- Names
+
+but update the receipt and prices.
+
+---
+
+25. SMART REPEATED ITEMS
+
+If local history is implemented, optionally recognize recurring items.
+
+Example:
+
+Last time:
+
+Milk → Arun + Surajith
+
+Next time the receipt contains Milk, suggest:
+
+«Previously shared by Arun + Surajith»
+
+But NEVER automatically assign something without user confirmation.
+
+Suggestions must remain suggestions.
+
+---
+
+26. ERROR HANDLING
+
+Handle:
+
+- Blurry receipt
+- Dark photo
+- Cropped receipt
+- Unsupported receipt
+- Missing total
+- Duplicate items
+- Unreadable prices
+- Multiple receipts
+- Incorrect quantities
+- Tax mismatch
+- AI extraction failure
+- Network failure
+- API failure
+
+If AI cannot confidently read something:
+
+«We couldn't read this item.»
+
+Give the user a manual correction option.
+
+Never make up data.
+
+---
+
+27. PRIVACY
+
+Receipts can contain sensitive purchasing information.
+
+Design with privacy in mind.
+
+Clearly explain when a receipt image is being sent to an external AI/OCR service.
+
+Do not store receipt images permanently unless explicitly required.
+
+If possible:
+
+- Process temporarily
+- Delete uploaded images after processing
+- Store only structured bill data locally
+- Give users a delete-all-history option
+
+Do not collect unnecessary personal information.
+
+---
+
+28. UI/UX DESIGN
+
+The design should feel like a modern consumer mobile application.
+
+Avoid:
+
+- Huge dashboards
+- Corporate-looking tables everywhere
+- Excessive gradients
+- Excessive animations
+- Tiny buttons
+- Dense forms
+- Unnecessary login screens
+
+Use:
+
+- Large touch targets
+- Clear typography
+- Cards
+- Bottom sheets where appropriate
+- Sticky action buttons
+- Simple navigation
+- Strong visual hierarchy
+
+The most important action on every screen should be obvious.
+
+---
+
+29. MOBILE-FIRST
+
+Design for phones first.
+
+Important requirements:
+
+- Camera integration
+- Touch-friendly controls
+- Bottom navigation/action areas
+- No horizontal scrolling
+- Responsive tables/cards
+- Keyboard-safe forms
+- Good behavior on small Android phones
+- Works properly in portrait mode
+
+Desktop should still look good, but mobile is the priority.
+
+---
+
+30. ACCESSIBILITY
+
+Support:
+
+- Keyboard navigation
+- Screen readers
+- Proper labels
+- Sufficient contrast
+- Focus states
+- Large tap targets
+- Meaningful error messages
+
+Do not rely exclusively on color to communicate state.
+
+---
+
+31. EMPTY STATES
+
+Create polished empty states.
+
+Example:
+
+No bills yet
+
+«Your next receipt starts here.»
+
+📸 Scan a receipt
+
+---
+
+32. LOADING STATES
+
+Use skeletons/spinners where appropriate.
+
+AI processing should communicate what is happening:
+
+Reading receipt…
+
+Finding products…
+
+Checking prices…
+
+Almost done…
+
+Do not fake long processing times.
+
+---
+
+33. TECHNICAL ARCHITECTURE
+
+Build this as a clean modern web application.
+
+Choose a sensible stack suitable for deployment on Cloudflare Pages/Workers or an equivalent low-cost platform.
+
+Recommended architecture:
+
+Frontend:
+
+- React
+- TypeScript
+- Modern CSS/Tailwind if appropriate
+
+Backend:
+
+- Serverless API / Cloudflare Workers or equivalent
+
+AI:
+
+- Vision-capable OCR/LLM API
+
+Storage:
+
+- LocalStorage/IndexedDB for anonymous/local history initially
+- Backend database only where genuinely necessary
+
+Keep AI/API keys server-side.
+
+NEVER expose secret API keys in frontend JavaScript.
+
+---
+
+34. AI EXTRACTION API DESIGN
+
+Create a dedicated backend endpoint such as:
+
+"POST /api/receipt/parse"
+
+Input:
+
+Receipt image(s)
+
+Output:
+
+Strict structured JSON.
+
+The AI response must be schema-validated before being accepted.
+
+If parsing fails:
+
+Return a controlled error.
+
+Do not let malformed AI output break the UI.
+
+---
+
+35. DETERMINISTIC SPLIT ENGINE
+
+Create a separate calculation module.
+
+The split engine should NOT depend on AI.
+
+Input:
+
+- Items
+- Quantities
+- Prices
+- Discounts
+- Taxes
+- Charges
+- People
+- Allocation rules
+- Payer
+
+Output:
+
+- Per-person subtotal
+- Per-person discounts
+- Per-person tax
+- Per-person charges
+- Final amount
+- Settlement amounts
+
+The calculation engine must be thoroughly tested.
+
+---
+
+36. TEST CASES
+
+Create tests for:
+
+1. One person, one item
+2. Two people equal split
+3. Three people equal split
+4. One person owns everything
+5. Quantity split
+6. Weight split
+7. Percentage split
+8. Shared household item
+9. GST
+10. CGST + SGST
+11. IGST
+12. Discounts
+13. Service charges
+14. Round-off
+15. Decimal quantities
+16. ₹0.01 rounding differences
+17. Multiple receipts
+18. Missing receipt total
+19. Manual bill
+20. Mixed individual/shared items
+
+The final calculated total must always reconcile with the bill total.
+
+---
+
+37. IMPORTANT PRODUCT RULE
+
+The application should never blindly trust AI.
+
+The flow is:
+
+AI extracts → User verifies → Application calculates
+
+NOT:
+
+AI extracts → AI calculates → User blindly accepts
+
+The calculation engine must be deterministic.
+
+---
+
+38. NICE-TO-HAVE FEATURES
+
+If the core experience is stable, consider adding:
+
+Smart item categorization
+
+Automatically categorize:
+
+- Grocery
+- Dairy
+- Snacks
+- Household
+- Restaurant
+- Personal care
+- Other
+
+Search within receipt
+
+For large bills:
+
+«Search items…»
+
+Bulk allocation
+
+Select multiple items and assign them together.
+
+Favorites/recent people
+
+Quickly reuse common roommates.
+
+Dark mode
+
+Installable PWA
+
+Allow Roomies Split to be installed on Android/iOS as a web app.
+
+Offline manual splitting
+
+Manual bills should work without internet where possible.
+
+Receipt image viewer
+
+Let users reopen the original receipt while reviewing items.
+
+Undo/redo
+
+Provide undo for accidental changes.
+
+---
+
+39. DO NOT ADD THESE UNLESS NECESSARY
+
+Do NOT clutter the MVP with:
+
+- Social feeds
+- Chat
+- Cryptocurrency
+- Complex financial accounts
+- Bank integrations
+- Ads covering the UI
+- Mandatory registration
+- Subscription walls
+- Excessive gamification
+
+The product should remain focused.
+
+---
+
+40. FINAL USER EXPERIENCE
+
+The ideal journey should feel like:
+
+Step 1
+
+Scan Receipt
+
+📸
+
+Step 2
+
+AI says:
+
+«Found 18 items · Total ₹2,438»
+
+Step 3
+
+User quickly reviews/corrects the items.
+
+Step 4
+
+User adds:
+
+Surajith · Arun · Rahul
+
+Step 5
+
+For each item:
+
+Who had this?
+
+Tap a person, Everyone, or Custom quantity.
+
+Step 6
+
+Roomies Split calculates:
+
+Surajith → ₹1,024.50
+Arun → ₹756.25
+Rahul → ₹657.25
+
+Step 7
+
+User sees:
+
+Total ₹2,438.00 ✓
+
+and can share the result.
+
+---
+
+41. BRANDING
+
+Product name:
+
+Roomies Split
+
+Primary tagline:
+
+Split bills, without the math.
+
+Keep the branding friendly and memorable.
+
+The personality should feel:
+
+simple + clever + trustworthy + slightly playful
+
+The application should feel like something roommates would actually use repeatedly, not an enterprise expense-management tool.
+
+---
+
+42. DEVELOPMENT PRIORITY
+
+Build in this order:
+
+Phase 1 — Foundation
+
+- App shell
+- Homepage
+- Responsive UI
+- Manual bill creation
+- People management
+- Item management
+- Basic split engine
+
+Phase 2 — Receipt AI
+
+- Image upload
+- OCR/vision integration
+- Structured extraction
+- Review/correction
+- Receipt validation
+
+Phase 3 — Advanced splitting
+
+- Equal splitting
+- Individual assignment
+- Quantity allocation
+- Weight allocation
+- Percentage allocation
+- Shared items
+
+Phase 4 — Taxes & settlement
+
+- GST
+- CGST/SGST
+- Discounts
+- Charges
+- Rounding
+- Payer
+- Settlement
+
+Phase 5 — Polish
+
+- History
+- Duplicate bills
+- Share results
+- PWA
+- Offline/manual support
+- Animations
+- Accessibility
+- Error handling
+
+Do not sacrifice the core bill-splitting functionality to add fancy features.
+
+---
+
+FINAL REQUIREMENT
+
+Build the application completely from scratch.
+
+Do not assume existing code, APIs, components, database schemas, or design files exist.
+
+Create a polished working application rather than a prototype with placeholder buttons.
+
+Every major button should perform a real action.
+
+If an external AI/OCR service is required, create the proper backend abstraction and clearly isolate the API integration so the provider can be changed later.
+
+Prioritize:
+
+Accuracy → Simplicity → Speed → Polish
+
+The killer feature is:
+
+«Photo of receipt → automatically extracted items and quantities → extremely fast allocation → exact final split.»

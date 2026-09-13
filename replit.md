@@ -1,6 +1,6 @@
-# [Project name]
+# Roomies Split
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Roomies Split turns receipt photos or manual line items into an exact, shareable bill split for roommates and friends.
 
 ## Run & Operate
 
@@ -22,23 +22,36 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/roomies-split/src/App.tsx` — mobile-first app shell and local bill flows
+- `artifacts/roomies-split/src/lib/split-engine.ts` — deterministic allocation and rounding logic
+- `artifacts/api-server/src/routes/receipt.ts` — server-side receipt extraction endpoint
+- `lib/api-spec/openapi.yaml` — source of truth for the receipt parsing contract
+- `artifacts/roomies-split/src/index.css` — Roomies visual tokens and responsive styles
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Anonymous bills and history stay in browser localStorage; there is no required account or user database.
+- Receipt images are sent only during an explicit parse action; the server returns structured data for user review rather than calculating a split.
+- The split engine operates in integer paise/cents and distributes remainder amounts predictably so person totals always reconcile.
+- Receipt parsing uses a server-side provider boundary and schema validation, allowing the AI provider to be replaced without changing the UI contract.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Start from a manual bill or receipt images, including multiple images and drag-and-drop.
+- Review and edit extracted items, add people, select a payer, and allocate items equally, by percentage, or by quantity.
+- Reconcile discounts, CGST, SGST, IGST, other charges, round-off, and receipt-total mismatches.
+- Save local history, duplicate or rename past bills, and share the final split using native share or clipboard.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+No additional preferences recorded.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Frontend artifact workflows provide `PORT` and `BASE_PATH`; direct Vite builds need both values explicitly.
+- Receipt parsing requires `OPENAI_API_KEY` in Replit Secrets when the managed AI integration is unavailable — if it's missing, `/api/receipt/parse` returns a 502 with a clear message, which the frontend now displays as-is instead of a generic string.
+- GST on Indian receipts is printed two ways: additive (subtotal + CGST/SGST on top, typical for restaurants) or already inclusive (item prices include GST; any "GST breakup" table is informational, typical for grocery/retail). The extraction prompt normalizes to additive and zeroes cgst/sgst/igst (with a warning) when a receipt's tax is already baked into the total, so the split engine never double-counts it.
+- Fresh checkouts must delete any committed `*.tsbuildinfo` before `pnpm run typecheck` — stale build info can make `tsc --build` skip rebuilding `lib/*` packages and produce confusing `TS6305`/implicit-any errors that aren't real code issues.
 
 ## Pointers
 
